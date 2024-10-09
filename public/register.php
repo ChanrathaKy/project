@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($role === 'admin') {
         header("Location: dashboard.php");
     } elseif ($role === 'driver') {
-        header("Location: dashboard.php");
+        header("Location: dashboard.php"); 
     } else {
         header("Location: client_dashboard.php");
     }
