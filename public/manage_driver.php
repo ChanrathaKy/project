@@ -10,7 +10,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
 // Fetch completed deliveries from the database
 $completedDeliveriesStmt = $pdo->prepare("
-    SELECT cd.*, u.name AS driver_name, o.status, p.name AS product_name, o.contact 
+    SELECT cd.*, u.name AS driver_name, o.status, p.name AS product_name, o.contact, o.address 
     FROM completed_deliveries cd 
     JOIN users u ON cd.driver_id = u.id 
     JOIN orders o ON cd.order_id = o.id 
@@ -25,7 +25,7 @@ $completedDeliveries = $completedDeliveriesStmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Page Title</title>
+    <title>Manage Completed Deliveries</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="path/to/your/custom.css"> <!-- Custom CSS -->
 
@@ -69,36 +69,38 @@ $completedDeliveries = $completedDeliveriesStmt->fetchAll(PDO::FETCH_ASSOC);
 </nav>
 
 
-    <div class="container">
-        <h2 class="text-center">Manage Completed Deliveries</h2>
-        <table class="table table-bordered">
-            <thead>
+<div class="container">
+    <h2 class="text-center">Manage Completed Deliveries</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Status</th>
+                <th>Product Name</th>
+                <th>Driver Name</th>
+                <th>Contact</th>
+                <th>Address</th> <!-- Added Address Column -->
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (!empty($completedDeliveries)): ?>
+                <?php foreach ($completedDeliveries as $delivery): ?>
                 <tr>
-                    <th>Order ID</th>
-                    <th>Contact</th>
-                    <th>Status</th>
-                    <th>Product Name</th>
-                    <th>Driver Name</th>
+                    <td><?= htmlspecialchars($delivery['order_id'] ?? 'N/A') ?></td> 
+                    <td><?= htmlspecialchars($delivery['status'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($delivery['product_name'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($delivery['driver_name'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($delivery['contact'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($delivery['address'] ?? 'N/A') ?></td>
                 </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($completedDeliveries)): ?>
-                    <?php foreach ($completedDeliveries as $delivery): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($delivery['order_id'] ?? 'N/A') ?></td>
-                        <td><?= htmlspecialchars($delivery['contact'] ?? 'N/A') ?></td> <!-- Use null coalescing operator -->
-                        <td><?= htmlspecialchars($delivery['status'] ?? 'N/A') ?></td>
-                        <td><?= htmlspecialchars($delivery['product_name'] ?? 'N/A') ?></td>
-                        <td><?= htmlspecialchars($delivery['driver_name'] ?? 'N/A') ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="5" class="text-center">No completed deliveries available.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr>
+                    <td colspan="6" class="text-center">No completed deliveries available.</td> <!-- Updated colspan to 6 -->
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
 </body>
 </html>

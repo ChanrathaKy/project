@@ -32,12 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($user['role'] === 'driver') {
                 header("Location: driver_dashboard.php"); // Driver dashboard
             }
-            exit();
+            exit(); // Ensure no further code is executed after redirect
         } else {
-            $error = "Invalid username or password.";
+            $error = "Invalid username or password."; // Error for incorrect login
         }
     } else {
-        $error = "Please fill in both fields.";
+        $error = "Please fill in both fields."; // Error for empty fields
     }
 }
 ?>

@@ -123,68 +123,6 @@ $drivers = $driversStmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php endforeach; ?>
                     </div>
 
-                    <h3 class="dashboard-header">Pending Orders</h3>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Contact</th>
-                                <th>Status</th>
-                                <th>Product Name</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($pendingOrders as $order): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($order['order_id']) ?></td>
-                                <td><?= htmlspecialchars($order['contact']) ?></td>
-                                <td><?= htmlspecialchars($order['status']) ?></td>
-                                <td><?= htmlspecialchars($order['product_name']) ?></td>
-                                <td>
-                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#assignDriverModal<?= $order['order_id'] ?>">
-                                        Assign Driver
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <!-- The Modal -->
-                            <div class="modal fade" id="assignDriverModal<?= $order['order_id'] ?>" tabindex="-1" role="dialog" aria-labelledby="assignDriverModalLabel" aria-hidden="true">
-                                <div class="modal-dialog" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="assignDriverModalLabel">Assign Driver for Order ID: <?= $order['order_id'] ?></h5>
-                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <h6>Select a Driver:</h6>
-                                            <ul class="list-group">
-                                                <?php foreach ($drivers as $driver): ?>
-                                                    <li class="list-group-item">
-                                                        <?= htmlspecialchars($driver['name']) ?>
-                                                        <button class="btn btn-success btn-sm float-right" onclick="assignDriver(<?= $order['order_id'] ?>, <?= $driver['id'] ?>)">Assign</button>
-                                                    </li>
-                                                <?php endforeach; ?>
-                                            </ul>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

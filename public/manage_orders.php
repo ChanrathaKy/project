@@ -30,7 +30,9 @@ if ($role === 'admin') {
     $totalOrders = $totalOrdersStmt->fetchColumn();
 } elseif ($role === 'client') {
     // Fetch orders for the logged-in client
-    $stmt = $pdo->prepare("SELECT * FROM orders WHERE client_id = :client_id LIMIT :limit OFFSET :offset");
+    $stmt = $pdo->prepare("SELECT o.*, d.name as driver_name FROM orders o 
+                            LEFT JOIN users d ON o.driver_id = d.id 
+                            WHERE o.client_id = :client_id LIMIT :limit OFFSET :offset");
     $stmt->bindValue(':client_id', $user['id'], PDO::PARAM_INT);
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
@@ -43,7 +45,9 @@ if ($role === 'admin') {
     $totalOrders = $totalOrdersStmt->fetchColumn();
 } elseif ($role === 'driver') {
     // Fetch deliveries for the logged-in driver
-    $stmt = $pdo->prepare("SELECT * FROM orders WHERE driver_id = :driver_id LIMIT :limit OFFSET :offset");
+    $stmt = $pdo->prepare("SELECT o.*, c.name as client_name FROM orders o 
+                            LEFT JOIN users c ON o.client_id = c.id 
+                            WHERE o.driver_id = :driver_id LIMIT :limit OFFSET :offset");
     $stmt->bindValue(':driver_id', $user['id'], PDO::PARAM_INT);
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
@@ -70,21 +74,17 @@ $totalPages = $totalOrders > 0 ? ceil($totalOrders / $limit) : 1;
     <title>Your Page Title</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="path/to/your/custom.css"> <!-- Custom CSS -->
-
 </head>
 <body>
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <!-- Brand/Logo -->
         <a class="navbar-brand" href="#">
             Rindra Delivery Service
         </a>
-        <!-- Toggler button for mobile view -->
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <!-- Navigation links -->
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
@@ -110,63 +110,78 @@ $totalPages = $totalOrders > 0 ? ceil($totalOrders / $limit) : 1;
     </div>
 </nav>
 
-    <div class="container mt-5">
-        <h2 class="text-center">Order and Delivery History</h2>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Order ID</th>
-                    <th>Product Name</th>
-                    <th>Status</th>
-                    <th>Client</th>
-                    <?php if ($role === 'admin' || $role === 'driver'): ?>
-                        <th>Driver</th>
-                    <?php endif; ?>
-                    <th>Created At</th>
-                    <th>Delivery Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($orders)): ?>
-                    <?php foreach ($orders as $order): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($order['id']) ?></td>
-                            <!-- Check if product_name exists and is not null -->
-                            <td><?= isset($order['product_name']) ? htmlspecialchars($order['product_name']) : 'N/A' ?></td>
-                            <td><?= htmlspecialchars($order['status']) ?></td>
-                            <td><?= htmlspecialchars($order['client_name'] ?? 'N/A') ?></td>
-                            <?php if ($role === 'admin' || $role === 'driver'): ?>
-                                <td><?= htmlspecialchars($order['driver_name'] ?? 'Unassigned') ?></td>
-                            <?php endif; ?>
-                            <!-- Check if created_at exists and is not null -->
-                            <td><?= isset($order['created_at']) ? htmlspecialchars($order['created_at']) : 'N/A' ?></td>
-                            <td><?= isset($order['delivery_date']) ? htmlspecialchars($order['delivery_date']) : 'N/A' ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="7" class="text-center">No orders found</td>
-                    </tr>
+<div class="container mt-5">
+    <h2 class="text-center">Order and Delivery History</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Product Name</th>
+                <th>Status</th>
+                <th>Client</th>
+                <?php if ($role === 'admin' || $role === 'driver'): ?>
+                    <th>Driver</th>
                 <?php endif; ?>
-            </tbody>
-        </table>
+                <th>Address</th> <!-- New column for address -->
+                <th>Created At</th>
+                <th>Actions</th> <!-- New column for actions -->
+            </tr>
+        </thead>
+        <tbody>
+    <?php if (!empty($orders)): ?>
+        <?php foreach ($orders as $order): ?>
+            <tr>
+                <td><?= htmlspecialchars($order['id']) ?></td>
+                <td><?= isset($order['product_name']) ? htmlspecialchars($order['product_name']) : 'N/A' ?></td>
+                <td><?= htmlspecialchars($order['status']) ?></td>
+                <td><?= htmlspecialchars($order['client_name'] ?? 'N/A') ?></td>
+                <?php if ($role === 'admin' || $role === 'driver'): ?>
+                    <td><?= htmlspecialchars($order['driver_name'] ?? 'Unassigned') ?></td>
+                <?php endif; ?>
+                <td><?= htmlspecialchars($order['address'] ?? 'N/A') ?></td>
+                <td><?= isset($order['created_at']) ? htmlspecialchars($order['created_at']) : 'N/A' ?></td>
+                <td>
+                    <div class="d-flex justify-content-between">
+                        <a href="edit_order.php?id=<?= $order['id'] ?>" class="btn btn-primary btn-sm mr-2">Edit</a>
+                        <form method="POST" action="delete_order.php" style="display:inline;">
+                            <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
+                            <button type="submit" class="btn btn-danger btn-sm" 
+                                    onclick="return confirm('Are you sure you want to delete this order?');">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="8" class="text-center">No orders found</td>
+        </tr>
+    <?php endif; ?>
+</tbody>
+    </table>
 
-        <!-- Pagination -->
-        <nav>
-            <ul class="pagination justify-content-center">
-                <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                    <a class="page-link" href="?page=<?= $page - 1 ?>">Previous</a>
+    <!-- Pagination -->
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                <a class="page-link" href="?page=<?= $page - 1 ?>">Previous</a>
+            </li>
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                    <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
                 </li>
-                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                    <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-                        <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
-                    </li>
-                <?php endfor; ?>
-                <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
-                    <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
-                </li>
-            </ul>
-        </nav>
-    </div>
+            <?php endfor; ?>
+            <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+                <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
-</html>
+</html>  
